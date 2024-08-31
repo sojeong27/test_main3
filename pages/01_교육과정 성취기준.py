@@ -69,8 +69,15 @@ except Exception as e:
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
 split_documents = text_splitter.split_documents(docs)
 
-# 단계 3: 임베딩 생성
-embeddings = OpenAIEmbeddings(model_name="text-embedding-ada-002")  # 예시 모델 이름
+# 단계 3: 임베딩 생성 함수
+def get_embeddings(documents):
+    embeddings = []
+    for doc in documents:
+        response = openai.Embedding.create(input=doc.content, model="text-embedding-ada-002")
+        embeddings.append(response['data'][0]['embedding'])
+    return embeddings
+
+embeddings = get_embeddings(split_documents)
 
 # 단계 4: 벡터 저장소(DB) 생성
 vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
