@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Streamlit 프로젝트 제목 설정
-st.title("2022 개정 교육과정 성취기준 확인하기📜")
+st.title("2022 개정 교육과정 성취기준📜")
 
 # 초기 세션 상태 설정
 if "messages" not in st.session_state:
