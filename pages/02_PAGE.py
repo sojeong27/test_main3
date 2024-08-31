@@ -1,14 +1,14 @@
-import streamlit as st 
-from langchain_core.messages.chat import ChatMessage 
-from langchain_core.prompts import ChatPromptTemplate 
-from langchain_openai import ChatOpenAI 
-from langchain_core.output_parsers import StrOutputParser 
-from langchain_text_splitters import RecursiveCharacterTextSplitter 
-from langchain_community.document_loaders import UnstructuredExcelLoader 
-from langchain_community.vectorstores import FAISS 
-from langchain_core.runnables import RunnablePassthrough 
-from langchain_openai import OpenAIEmbeddings 
-from dotenv import load_dotenv 
+import streamlit as st
+from langchain_core.messages.chat import ChatMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import UnstructuredExcelLoader
+from langchain_community.vectorstores import FAISS
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import OpenAIEmbeddings
+from dotenv import load_dotenv
 import os
 
 # 환경 변수 로드
@@ -133,6 +133,11 @@ if submit_button:
             # 대화 기록을 세션 상태에 저장
             add_message("user", user_input)
             add_message("assistant", ai_answer)
+
+        else:
+            warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
+    else:
+        warning_msg.warning("교과, 학년군, 학습 주제를 모두 입력해주세요.")
 
         else:
             warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
