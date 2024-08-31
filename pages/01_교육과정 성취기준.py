@@ -1,4 +1,6 @@
 import streamlit as st
+import openai  # OpenAI 모듈 임포트
+from dotenv import load_dotenv
 from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -8,7 +10,6 @@ from langchain_community.document_loaders import UnstructuredExcelLoader
 from langchain_community.vectorstores import FAISS
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings
-from dotenv import load_dotenv
 
 # 환경 변수 로드
 load_dotenv()
@@ -16,7 +17,7 @@ load_dotenv()
 # Streamlit 프로젝트 제목 설정
 st.title("교육과정 기반 QA📜")
 
-# 처음 1번만 실행하기 위한 코드
+# 초기 세션 상태 설정
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 if "chain" not in st.session_state:
@@ -66,8 +67,25 @@ except Exception as e:
     st.stop()
 
 # 단계 2: 문서 분할
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
-split_documents = text_splitter.split_documents(docs)
+def split_docs_and_check(docs, chunk_size, chunk_overlap):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    split_documents = text_splitter.split_documents(docs)
+    
+    # 토큰 수 검사
+    for idx, doc in enumerate(split_documents):
+        # 문서 내용에서, 이 경우 content를 문자열로 가져옴
+        num_tokens = len(doc.content.split())  # 'Document' 객체의 'content'를 사용
+        if num_tokens > 128000:
+            st.error(f"Document chunk {idx} is too large: {num_tokens} tokens")
+            st.stop()
+    
+    return split_documents
+
+split_documents = split_docs_and_check(docs, chunk_size=100, chunk_overlap=10)
+
+# 필요시 더 작은 chunk_size로 시도
+if len(split_documents) > 1 and max(len(doc.content.split()) for doc in split_documents) > 128000:
+    split_documents = split_docs_and_check(docs, chunk_size=50, chunk_overlap=5)
 
 # 단계 3: 임베딩 생성
 embeddings = OpenAIEmbeddings()
@@ -93,10 +111,8 @@ def create_prompt(selected_subject, selected_grade, task_input):
     """
     return ChatPromptTemplate.from_template(prompt_template)
 
-
 # 단계 7: 언어 모델 생성
-llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
-
+llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)  
 
 # 학년군 또는 학습 주제가 변경될 때 체인 재생성
 def update_chain(selected_subject, selected_grade, task_input):
@@ -108,7 +124,6 @@ def update_chain(selected_subject, selected_grade, task_input):
         | StrOutputParser()
     )
     st.session_state["chain"] = chain
-
 
 # 이전 대화 기록 출력
 print_messages()
