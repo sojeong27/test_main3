@@ -3,23 +3,18 @@ from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
-from langchain_teddynote.prompts import load_prompt
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_teddynote import logging
+from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
-import os
 
 # API KEY 정보로드
 load_dotenv()
 
 # 프로젝트 이름을 입력합니다.
-logging.langsmith("[Project] Curriculum RAG")
-
 st.title("교육과정 기반 QA📜")
 
 # 처음 1번만 실행하기 위한 코드
@@ -32,7 +27,14 @@ with st.sidebar:
     # 초기화 버튼 생성
     clear_bnt = st.button("대화 초기화")
 
-    # 이전 대화를 출력
+    selected_grade = st.selectbox(
+        "학년군을 선택해주세요",
+        ["초등학교 3~4학년", "초등학교 5~6학년", "중학교 1~3학년"],
+        index=0,
+    )
+    task_input = st.text_input("학습 주제를 입력해주세요", "")
+
+    # 초기화 버튼 클릭 시 대화 초기화
     if clear_bnt:
         st.session_state["messages"] = []
 
@@ -64,29 +66,38 @@ vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddin
 retriever = vectorstore.as_retriever()
 
 # 단계 6: 프롬프트 생성(Create Prompt)
-prompt = ChatPromptTemplate.from_template(
-    """초등학교 3~4학년의 (1) 힘과 우리 생활 단원의 성취기준은 다음과 같습니다. "[4과01-01] 일상생활에서 힘과 관련된 현상에 흥미를 갖고, 물체를 밀거나 당길 때 나타나는 현상을 관찰할 수 있다. [4과01-02] 수평잡기 활동을 통해 물체의 무게를 비교할 수 있다. [4과01-03] 무게를 정확히 비교하기 위해서는 저울이 필요함을 알고, 저울을 사용해 무게를 비교할 수 있다. [4과01-04] 지레, 빗면과 같은 도구를 이용하면 물체를 들어 올릴 때 드는 힘의 크기가 달라짐을 알고, 도구가 일상생활에서 어떻게 쓰이는지 조사하여 공유할 수 있다." 이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, 성취기준을 수정하지 말고, 그대로 모두 찾아서 알려주세요.
+def create_prompt(selected_grade, task_input):
+    prompt_template = f"""
+    {selected_grade}의 학습 성취기준은 다음과 같습니다:
+    "[4과01-01] 일상생활에서 힘과 관련된 현상에 흥미를 갖고, 물체를 밀거나 당길 때 나타나는 현상을 관찰할 수 있다.
+     [4과01-02] 수평잡기 활동을 통해 물체의 무게를 비교할 수 있다.
+     [4과01-03] 무게를 정확히 비교하기 위해서는 저울이 필요함을 알고, 저울을 사용해 무게를 비교할 수 있다.
+     [4과01-04] 지레, 빗면과 같은 도구를 이용하면 물체를 들어 올릴 때 드는 힘의 크기가 달라짐을 알고, 도구가 일상생활에서 어떻게 쓰이는지 조사하여 공유할 수 있다."
+    이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, {task_input}와 관련된 성취기준을 수정하지 말고, 그대로 모두 찾아서 알려주세요.
 
-#Question: 
-{question} 
-#Context: 
-{context} 
+    # Question:
+    {task_input}
+    # Context:
+    {{context}}
 
-#Answer:"""
-)
+    # Answer:
+    """
+    return ChatPromptTemplate.from_template(prompt_template)
 
 # 단계 7: 언어모델(LLM) 생성
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
 # 단계 8: 체인(Chain) 생성 및 초기화
 if "chain" not in st.session_state:
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-    st.session_state["chain"] = chain
+    if task_input:
+        prompt = create_prompt(selected_grade, task_input)
+        chain = (
+            {"context": retriever, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+        st.session_state["chain"] = chain
 
 # 이전 대화 기록 출력
 print_messages()
@@ -98,8 +109,7 @@ user_input = st.chat_input("궁금한 내용을 물어보세요!")
 warning_msg = st.empty()
 
 # 만약에 사용자 입력이 들어오면...
-if user_input:
-    # chain을 생성
+if user_input and "chain" in st.session_state:
     chain = st.session_state["chain"]
 
     if chain is not None:
