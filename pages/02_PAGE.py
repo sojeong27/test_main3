@@ -27,18 +27,12 @@ if "messages" not in st.session_state:
     # 대화기록을 저장하기 위한 용도로 생성한다.
     st.session_state["messages"] = []
 
-if "chain" not in st.session_state:
-    # 아무런 파일을 업로드 하지 않을 경우
-    st.session_state["chain"] = None
-
 # 사이드바 생성
 with st.sidebar:
     # 초기화 버튼 생성
     clear_bnt = st.button("대화 초기화")
 
     # 이전 대화를 출력
-
-
 def print_messages():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
