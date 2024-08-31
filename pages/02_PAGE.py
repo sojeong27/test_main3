@@ -34,7 +34,7 @@ with st.sidebar:
     )
     
     task_input = st.text_input("학습 주제를 입력해주세요", "")
-    submit_button = st.b준 확인")
+    submit_button = st.button(label="성취기준 확인")
 
 # 초기화 버튼 눌렀을 때 대화 초기화
 if clear_bnt:
