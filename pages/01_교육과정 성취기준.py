@@ -24,7 +24,7 @@ if "chain" not in st.session_state:
 
 # 사이드바 생성 및 초기화
 with st.sidebar:
-    clear_btn = st.button("대화 초기화")
+    clear_btn = st.button("화면 초기화")
 
     selected_subject = st.selectbox(
         "교과를 선택해주세요",
