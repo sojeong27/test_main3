@@ -74,7 +74,7 @@ retriever = vectorstore.as_retriever()
 # 단계 6: 프롬프트 생성 함수
 def create_prompt(selected_grade, task_input):
     prompt_template = f"""
-    {selected_grade}에서 선택한 학년군을 찾고, {task_input}와 관련된 성취기준을 찾아서 성취기준을 표로 만들어주세요.
+    {selected_grade}에서 선택한 학년군을 찾고, {task_input}와 관련된 성취기준 내용을 찾아서 단원명과 성취기준 내용을 표로 만들어주세요.
 
     # Task:
     {task_input}
