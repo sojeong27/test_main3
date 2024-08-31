@@ -66,26 +66,8 @@ except Exception as e:
     st.stop()
 
 # 단계 2: 문서 분할
-# 적절한 분할 크기를 사용하고 문서 조각의 토큰 수 확인
-def split_docs_and_check(docs, chunk_size, chunk_overlap):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    split_documents = text_splitter.split_documents(docs)
-    
-    # 토큰 수 검사
-    for idx, doc in enumerate(split_documents):
-        num_tokens = len(doc.split())
-        if num_tokens > 128000:  # 문서 조각의 토큰 수가 너무 많은지 검사
-            st.error(f"Document chunk {idx} is too large: {num_tokens} tokens")
-            st.stop()
-    
-    return split_documents
-
-# 예시로 chunk_size=200, chunk_overlap=20로 시도
-split_documents = split_docs_and_check(docs, chunk_size=200, chunk_overlap=20)
-
-# 단위 크기를 더 줄일 필요가 있다면 조정
-if len(split_documents) > 1 and max([len(doc.split()) for doc in split_documents]) > 128000:
-    split_documents = split_docs_and_check(docs, chunk_size=100, chunk_overlap=10)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
+split_documents = text_splitter.split_documents(docs)
 
 # 단계 3: 임베딩 생성
 embeddings = OpenAIEmbeddings(model_name="text-embedding-ada-002")  # 예시 모델 이름
