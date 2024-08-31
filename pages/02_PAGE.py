@@ -35,7 +35,7 @@ with st.sidebar:
 
     selected_grade = st.selectbox(
         "학년군을 선택해주세요",
-        ["초등학교 3~4학년", "초등학교 5~6학년", "중학교 1~3학년"],
+        ["초등학교 3~4학년", "초등학교 5~6학년"],
         index=0,
     )
 
@@ -80,7 +80,7 @@ retriever = vectorstore.as_retriever()
 # 단계 6: 프롬프트 생성 함수
 def create_prompt(selected_subject, selected_grade, task_input):
     prompt_template = f"""
-    {selected_subject}에서 선택한 교과를 찾고 {selected_grade}에서 선택한 학년군을 찾은 다음 {task_input}와 관련된 성취기준을 찾아서 단원명과 성취기준을 표로 만들어주세요.
+    {selected_subject}에서 선택한 교과를 찾고 {selected_grade}에서 선택한 학년군을 찾은 다음 {task_input}와 관련된 성취기준을 찾아서 영역과 성취기준을 표로 만들어주세요.
     만약 {selected_subject}에서 선택한 교과와 {selected_grade}에서 선택한 학년군에서 {task_input}와 관련된 성취기준을 찾을 수 없다면 "해당 교과에서 관련된 성취기준을 찾을 수 없습니다."라고 말해주세요.
     
     # Task:
