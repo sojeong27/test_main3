@@ -88,8 +88,8 @@ def create_prompt(selected_grade, task_input):
 # 단계 7: 언어 모델 생성
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
-# 단계 8: 체인 생성 및 초기화
-if task_input and selected_grade and st.session_state["chain"] is None:
+# 학년군 또는 학습 주제가 변경될 때 체인 재생성
+def update_chain(selected_grade, task_input):
     prompt = create_prompt(selected_grade, task_input)
     chain = (
         {"context": retriever, "task": RunnablePassthrough()}
@@ -107,7 +107,8 @@ warning_msg = st.empty()
 
 # 결과를 반환하는 버튼 클릭 시
 if submit_button:
-    if selected_grade and task_input and "chain" in st.session_state:
+    if selected_grade and task_input:
+        update_chain(selected_grade, task_input)
         chain = st.session_state["chain"]
 
         if chain is not None:
