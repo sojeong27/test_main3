@@ -57,7 +57,6 @@ def print_messages():
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
 
-
 # 단계 1: 엑셀 문서 로드
 try:
     loader = UnstructuredExcelLoader("./data/교육과정성취기준.xlsx", mode="elements")
@@ -67,7 +66,8 @@ except Exception as e:
     st.stop()
 
 # 단계 2: 문서 분할
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
+# chunk_size와 chunk_overlap 값을 조정하여 토큰 수 줄이기
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=20)
 split_documents = text_splitter.split_documents(docs)
 
 # 단계 3: 임베딩 생성
@@ -78,7 +78,6 @@ vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddin
 
 # 단계 5: 검색기 생성
 retriever = vectorstore.as_retriever()
-
 
 # 단계 6: 프롬프트 생성 함수
 def create_prompt(selected_subject, selected_grade, task_input):
