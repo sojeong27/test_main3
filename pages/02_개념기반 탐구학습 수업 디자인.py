@@ -20,7 +20,7 @@ if "chain" not in st.session_state:
 # 사이드바 생성
 with st.sidebar:
     # 초기화 버튼 생성
-    clear_btn = st.button("대화 초기화")
+    clear_btn = st.button("화면 초기화")
 
     task_input = st.text_input("성취기준 또는 학습 주제 입력", "")
     submit_button = st.button(label="질문 생성")
