@@ -27,6 +27,7 @@ with st.sidebar:
         ["초등학교 3~4학년", "초등학교 5~6학년", "중학교 1~3학년"],
         index=0,
     )
+    task_input = st.text_input("학습 주제를 입력해주세요", "")
 
 # 처음 1번만 실행하기 위한 코드
 if "messages" not in st.session_state:
@@ -62,15 +63,17 @@ vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddin
 retriever = vectorstore.as_retriever()
 
 # 단계 6: 프롬프트 생성 함수
-def create_prompt(selected_grade):
+def create_prompt(selected_grade, task_input):
     prompt_template = f"""
     {selected_grade}의 학습 성취기준은 다음과 같습니다:
     "[4과01-01] 일상생활에서 힘과 관련된 현상에 흥미를 갖고, 물체를 밀거나 당길 때 나타나는 현상을 관찰할 수 있다.
      [4과01-02] 수평잡기 활동을 통해 물체의 무게를 비교할 수 있다.
      [4과01-03] 무게를 정확히 비교하기 위해서는 저울이 필요함을 알고, 저울을 사용해 무게를 비교할 수 있다.
      [4과01-04] 지레, 빗면과 같은 도구를 이용하면 물체를 들어 올릴 때 드는 힘의 크기가 달라짐을 알고, 도구가 일상생활에서 어떻게 쓰이는지 조사하여 공유할 수 있다."
-    이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, 수정하지 말고, 그대로 모두 찾아서 알려주세요.
+    이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, {task_input}와 관련된 성취기준을 수정하지 말고, 그대로 모두 찾아서 알려주세요.
 
+    # Task:
+    {task_input}
     # Context:
     {{context}}
 
@@ -82,10 +85,13 @@ def create_prompt(selected_grade):
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
 # 단계 8: 체인(Chain) 생성 및 초기화
-if "chain" not in st.session_state and selected_grade:
-    prompt = create_prompt(selected_grade)
+if "chain" not in st.session_state:
+    st.session_state["chain"] = None
+
+if task_input and selected_grade and st.session_state["chain"] is None:
+    prompt = create_prompt(selected_grade, task_input)
     chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
+        {"context": retriever, "task": RunnablePassthrough()}
         | prompt
         | llm
         | StrOutputParser()
@@ -98,22 +104,29 @@ print_messages()
 # 경고 메시지를 띄우기 위한 빈 영역
 warning_msg = st.empty()
 
-# 사용자가 학년군을 선택하면 결과를 반환
-if selected_grade and "chain" in st.session_state:
-    chain = st.session_state["chain"]
+# 결과를 반환하는 버튼 생성
+if st.button("결과 확인"):
+    if selected_grade and task_input and "chain" in st.session_state:
+        chain = st.session_state["chain"]
 
-    if chain is not None:
-        # 체인을 사용해 질문을 처리하고 결과를 반환
-        response = chain.run(selected_grade)
-        with st.chat_message("assistant"):
-            container = st.empty()
-            ai_answer = ""
-            for token in response:
-                ai_answer += token
-                container.markdown(ai_answer)
+        if chain is not None:
+            user_input = f"{selected_grade}, {task_input}"
+            # 사용자의 입력
+            st.chat_message("user").write(user_input)
+            # 스트리밍 호출
+            response = chain.stream(user_input)
+            with st.chat_message("assistant"):
+                container = st.empty()
+                ai_answer = ""
+                for token in response:
+                    ai_answer += token
+                    container.markdown(ai_answer)
+        
+            # 대화기록을 저장한다.
+            add_message("user", user_input)
+            add_message("assistant", ai_answer)
 
-        # 대화기록을 저장한다.
-        add_message("assistant", ai_answer)
-
+        else:
+            warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
     else:
-        warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
+        warning_msg.warning("학년군과 학습 주제를 모두 입력해주세요.")
