@@ -11,3 +11,4 @@ pymupdf>=1.21.1
 faiss-cpu
 unstructured>=0.3.0
 networkx>=2.5
+openpyxl>=3.0.0
