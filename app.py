@@ -6,6 +6,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 
+# 페이지 설정
+st.set_page_config(page_title="개념기반 탐구학습 수업 디자인")
+
 # API KEY 정보로드
 load_dotenv()
 
@@ -19,7 +22,6 @@ if "chain" not in st.session_state:
 
 # 사이드바 생성
 with st.sidebar:
-    st.header("개념기반 탐구학습 수업 디자인")  # 사이드바에 원하는 메뉴명 추가
     # 초기화 버튼 생성
     clear_btn = st.button("대화 초기화")
 
