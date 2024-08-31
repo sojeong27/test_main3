@@ -138,8 +138,3 @@ if submit_button:
             warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
     else:
         warning_msg.warning("교과, 학년군, 학습 주제를 모두 입력해주세요.")
-
-        else:
-            warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
-    else:
-        warning_msg.warning("학년군과 학습 주제를 모두 입력해주세요.")
