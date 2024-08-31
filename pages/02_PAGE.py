@@ -27,6 +27,12 @@ if "chain" not in st.session_state:
 with st.sidebar:
     clear_btn = st.button("대화 초기화")
 
+    selected_subject = st.selectbox(
+        "교과를 선택해주세요",
+        ["국어", "수학", "사회", "과학"],
+        index=0,
+    )
+
     selected_grade = st.selectbox(
         "학년군을 선택해주세요",
         ["초등학교 3~4학년", "초등학교 5~6학년", "중학교 1~3학년"],
@@ -34,7 +40,7 @@ with st.sidebar:
     )
 
     task_input = st.text_input("학습 주제를 입력해주세요", "")
-    submit_button = st.button(label="결과 확인")
+    submit_button = st.button(label="성취기준준 확인")
 
 # 대화 초기화 버튼 클릭 시
 if clear_btn:
@@ -72,9 +78,9 @@ vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddin
 retriever = vectorstore.as_retriever()
 
 # 단계 6: 프롬프트 생성 함수
-def create_prompt(selected_grade, task_input):
+def create_prompt(selected_subject, selected_grade, task_input):
     prompt_template = f"""
-    {selected_grade}에서 선택한 학년군을 찾고, {task_input}와 관련된 성취기준 내용을 찾아서 단원명과 성취기준 내용을 표로 만들어주세요.
+    {selected_subject}에서 교과를 찾고 {selected_grade}에서 선택한 학년군을 찾은 다음 {task_input}와 관련된 성취기준 내용을 찾아서 단원명과 성취기준 내용을 표로 만들어주세요.
 
     # Task:
     {task_input}
@@ -89,8 +95,8 @@ def create_prompt(selected_grade, task_input):
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
 # 학년군 또는 학습 주제가 변경될 때 체인 재생성
-def update_chain(selected_grade, task_input):
-    prompt = create_prompt(selected_grade, task_input)
+def update_chain(selected_subject, selected_grade, task_input):
+    prompt = create_prompt(selected_subject, selected_grade, task_input)
     chain = (
         {"context": retriever, "task": RunnablePassthrough()}
         | prompt
@@ -107,12 +113,12 @@ warning_msg = st.empty()
 
 # 결과를 반환하는 버튼 클릭 시
 if submit_button:
-    if selected_grade and task_input:
-        update_chain(selected_grade, task_input)
+    if selected_subject and selected_grade and task_input:
+        update_chain(selected_subject, selected_grade, task_input)
         chain = st.session_state["chain"]
 
         if chain is not None:
-            user_input = f"{selected_grade}, {task_input}"
+            user_input = f"{selected_subject}, {selected_grade}, {task_input}"
             # 사용자의 입력 출력
             st.chat_message("user").write(user_input)
             # 스트리밍 호출
