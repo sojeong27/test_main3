@@ -67,7 +67,7 @@ except Exception as e:
 
 # 단계 2: 문서 분할
 # chunk_size와 chunk_overlap 값을 조정하여 토큰 수 줄이기
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=20)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
 split_documents = text_splitter.split_documents(docs)
 
 # 단계 3: 임베딩 생성
