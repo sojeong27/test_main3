@@ -27,7 +27,6 @@ with st.sidebar:
         ["초등학교 3~4학년", "초등학교 5~6학년", "중학교 1~3학년"],
         index=0,
     )
-    task_input = st.text_input("학습 주제를 입력해주세요", "")
 
 # 처음 1번만 실행하기 위한 코드
 if "messages" not in st.session_state:
@@ -36,14 +35,17 @@ if "messages" not in st.session_state:
 if clear_bnt:
     st.session_state["messages"] = []
 
+
 # 이전 대화 기록 출력 함수
 def print_messages():
     for chat_message in st.session_state["messages"]:
         st.chat_message(chat_message.role).write(chat_message.content)
 
+
 # 새로운 메세지를 추가
 def add_message(role, message):
     st.session_state["messages"].append(ChatMessage(role=role, content=message))
+
 
 # 단계 1: 문서 로드(Load Documents)
 loader = PyMuPDFLoader("data/과학과교육과정.pdf")
@@ -62,15 +64,16 @@ vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddin
 # 단계 5: 검색기(Retriever) 생성
 retriever = vectorstore.as_retriever()
 
+
 # 단계 6: 프롬프트 생성 함수
 def create_prompt(selected_grade, task_input):
     prompt_template = f"""
-    {selected_grade}의 학습 성취기준은 다음과 같습니다:
+    초등학교 3~4학년군의 학습 성취기준은 []안의 숫자가 4이고, 초등학교 5~6학년군은 []안의 숫자가 6이고, 중학교 1~2학년군은 []안의 숫자가 9입니다. 학습 성취기준은 다음과 같습니다:
     "[4과01-01] 일상생활에서 힘과 관련된 현상에 흥미를 갖고, 물체를 밀거나 당길 때 나타나는 현상을 관찰할 수 있다.
      [4과01-02] 수평잡기 활동을 통해 물체의 무게를 비교할 수 있다.
      [4과01-03] 무게를 정확히 비교하기 위해서는 저울이 필요함을 알고, 저울을 사용해 무게를 비교할 수 있다.
      [4과01-04] 지레, 빗면과 같은 도구를 이용하면 물체를 들어 올릴 때 드는 힘의 크기가 달라짐을 알고, 도구가 일상생활에서 어떻게 쓰이는지 조사하여 공유할 수 있다."
-    이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, {task_input}와 관련된 성취기준을 수정하지 말고, 그대로 모두 찾아서 알려주세요.
+    이러한 내용을 참고하여 성취기준을 찾는 방법을 알고, {selected_grade}의 학습 성취기준에서 {task_input}와 관련된 성취기준을 수정하지 말고, 그대로 모두 찾아서 알려주세요.
 
     # Task:
     {task_input}
@@ -81,12 +84,17 @@ def create_prompt(selected_grade, task_input):
     """
     return ChatPromptTemplate.from_template(prompt_template)
 
+
 # 단계 7: 언어모델(LLM) 생성
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
 # 단계 8: 체인(Chain) 생성 및 초기화
 if "chain" not in st.session_state:
     st.session_state["chain"] = None
+
+with st.form(key="task_form"):
+    task_input = st.text_input("학습 주제를 입력해주세요", "")
+    submit_button = st.form_submit_button(label="성취기준 확인")
 
 if task_input and selected_grade and st.session_state["chain"] is None:
     prompt = create_prompt(selected_grade, task_input)
@@ -104,8 +112,8 @@ print_messages()
 # 경고 메시지를 띄우기 위한 빈 영역
 warning_msg = st.empty()
 
-# 결과를 반환하는 버튼 생성
-if st.button("결과 확인"):
+# 결과를 반환하는 버튼 클릭 시
+if submit_button:
     if selected_grade and task_input and "chain" in st.session_state:
         chain = st.session_state["chain"]
 
@@ -121,10 +129,18 @@ if st.button("결과 확인"):
                 for token in response:
                     ai_answer += token
                     container.markdown(ai_answer)
-        
+
             # 대화기록을 저장한다.
             add_message("user", user_input)
             add_message("assistant", ai_answer)
+
+        else:
+            warning_msg.warning(
+                "체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요."
+            )
+    else:
+        warning_msg.warning("학년군과 학습 주제를 모두 입력해주세요.")
+
 
         else:
             warning_msg.warning("체인이 초기화되지 않았습니다. 페이지를 새로고침해주세요.")
