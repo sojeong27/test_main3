@@ -10,3 +10,4 @@ pymupdf>=1.21.1
 # faiss-cpu is likely the correct package, you can choose between faiss-cpu and faiss-gpu based on your need.
 faiss-cpu
 unstructured>=0.3.0
+networkx>=2.5
