@@ -6,9 +6,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 
-# 페이지 설정
-st.set_page_config(page_title="개념기반 탐구학습 수업 디자인")
-
 # API KEY 정보로드
 load_dotenv()
 
