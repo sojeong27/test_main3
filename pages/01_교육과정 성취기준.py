@@ -1,5 +1,4 @@
 import streamlit as st
-import openai  # OpenAI 모듈 임포트
 from dotenv import load_dotenv
 from langchain_core.messages.chat import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate
