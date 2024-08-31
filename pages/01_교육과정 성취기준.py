@@ -96,7 +96,7 @@ def create_prompt(selected_subject, selected_grade, task_input):
 
 
 # 단계 7: 언어 모델 생성
-llm = ChatOpenAI(model_name="gpt-4-mini", temperature=0)
+llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
 
 # 학년군 또는 학습 주제가 변경될 때 체인 재생성
